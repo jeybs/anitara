@@ -1,0 +1,407 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>ANITARA: elemental tower defense</title>
+<meta name="description" content="ANITARA is a tower defense game for iPhone and Mac. Build Fire, Water, Lightning and Ice towers anywhere beside the road and hold your headquarters against the horde. No ads, nothing sold for real money.">
+<meta property="og:title" content="ANITARA: elemental tower defense">
+<meta property="og:description" content="Build anywhere beside the road. Sixteen towers in four elements against the horde.">
+<meta property="og:image" content="assets/share.jpg">
+<meta name="theme-color" content="#0f2029">
+<link rel="icon" href="assets/icon-180.png">
+<link rel="apple-touch-icon" href="assets/icon-180.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@400;500;600&family=Lilita+One&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --night: #0f2029;        /* the sea around the islands, after dark */
+    --panel: #17323d;        /* the game's own panel colour */
+    --panel-lift: #1f4558;
+    --road: #efe3c2;         /* the pale stone of the roads */
+    --cream: #f4f1e6;
+    --mist: #a9c4cc;
+    --amber: #ffb52e;
+    --amber-deep: #d98a12;
+    --fire: #ff7a3d;
+    --water: #38b6e8;
+    --lightning: #b79cff;
+    --ice: #a6e6f4;
+    --display: "Lilita One", "Arial Rounded MT Bold", "Trebuchet MS", sans-serif;
+    --body: "Fredoka", "Avenir Next", "Segoe UI", system-ui, sans-serif;
+    --measure: 66ch;
+    --gutter: clamp(1.25rem, 5vw, 4.5rem);
+  }
+  * { box-sizing: border-box; }
+  html { scroll-behavior: smooth; scroll-padding-top: 5rem; }
+  @media (prefers-reduced-motion: reduce) { html { scroll-behavior: auto; } }
+  body {
+    margin: 0;
+    background: var(--night);
+    color: var(--cream);
+    font: 400 1.0625rem/1.6 var(--body);
+    -webkit-font-smoothing: antialiased;
+  }
+  img { max-width: 100%; height: auto; display: block; }
+  a { color: var(--amber); text-underline-offset: 0.18em; }
+  a:hover { color: var(--cream); }
+  :focus-visible { outline: 3px solid var(--amber); outline-offset: 3px; border-radius: 6px; }
+  h1, h2, h3 { font-family: var(--display); font-weight: 400; line-height: 1.08; margin: 0; letter-spacing: 0.005em; }
+  h2 { font-size: clamp(2rem, 4.6vw, 3.25rem); }
+  h3 { font-size: 1.375rem; line-height: 1.2; }
+  p { margin: 0 0 1em; max-width: var(--measure); }
+  .skip { position: absolute; left: -999px; top: 0; background: var(--amber); color: #1a1205; padding: 0.6rem 1rem; z-index: 20; }
+  .skip:focus { left: 1rem; top: 1rem; }
+
+  /* Top bar: three stops, like the three sections of the page. */
+  .bar {
+    position: sticky; top: 0; z-index: 10;
+    display: flex; align-items: center; justify-content: space-between; gap: 1rem;
+    padding: 0.7rem var(--gutter);
+    background: rgba(15, 32, 41, 0.92);
+    backdrop-filter: blur(8px);
+    border-bottom: 2px solid rgba(239, 227, 194, 0.14);
+  }
+  .bar .name { font-family: var(--display); font-size: 1.35rem; color: var(--amber); text-decoration: none; letter-spacing: 0.04em; }
+  .bar nav { display: flex; gap: clamp(0.9rem, 3vw, 2rem); }
+  .bar nav a { color: var(--cream); text-decoration: none; font-weight: 500; padding: 0.35rem 0; border-bottom: 3px solid transparent; }
+  .bar nav a:hover { border-bottom-color: var(--amber); }
+
+  /* Hero: the road from the key art is the picture; the words stand beside it. */
+  .hero {
+    display: grid;
+    grid-template-columns: minmax(0, 1.05fr) minmax(0, 0.95fr);
+    min-height: min(92vh, 860px);
+  }
+  .hero .words {
+    display: flex; flex-direction: column; justify-content: center;
+    padding: clamp(2.5rem, 7vw, 6rem) var(--gutter);
+  }
+  .hero .logo { width: min(100%, 430px); margin: 0 0 1.75rem -0.5rem; }
+  .hero h1 { font-size: clamp(2.5rem, 6.2vw, 4.6rem); max-width: 11ch; }
+  .hero .lede { font-size: 1.25rem; line-height: 1.5; color: var(--mist); margin: 1.25rem 0 2rem; max-width: 34ch; }
+  .hero .art { position: relative; overflow: hidden; }
+  .hero .art img { width: 100%; height: 100%; object-fit: cover; object-position: 50% 30%; }
+  .hero .art::before {
+    content: ""; position: absolute; inset: 0 auto 0 0; width: 34%;
+    background: linear-gradient(90deg, var(--night), rgba(15, 32, 41, 0));
+  }
+  .where {
+    display: inline-flex; align-items: center; gap: 0.85rem;
+    background: var(--panel); border: 2px solid var(--panel-lift); border-radius: 18px;
+    padding: 0.8rem 1.15rem 0.8rem 0.8rem; max-width: 30rem;
+  }
+  .where img { width: 56px; height: 56px; border-radius: 13px; flex: none; }
+  .where > div { min-width: 0; }
+  .where strong { display: block; font-weight: 600; }
+  .where span { color: var(--mist); font-size: 0.975rem; line-height: 1.35; display: block; }
+
+  section { padding: clamp(3.5rem, 9vw, 7rem) var(--gutter); }
+  section > h2 { margin-bottom: 1.1rem; }
+  .intro { color: var(--mist); font-size: 1.15rem; margin-bottom: 2.5rem; }
+
+  /* What you do: three real screens. */
+  .screens { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: clamp(1rem, 3vw, 2.5rem); max-width: 1080px; }
+  .screens figure { margin: 0; }
+  .screens img { border-radius: 28px; border: 6px solid #0a161c; box-shadow: 0 0 0 2px rgba(239, 227, 194, 0.18), 0 24px 40px -18px rgba(0, 0, 0, 0.7); }
+  .screens figcaption { margin-top: 1rem; }
+  .screens figcaption strong { font-family: var(--display); font-weight: 400; font-size: 1.3rem; display: block; line-height: 1.2; margin-bottom: 0.3rem; }
+  .screens figcaption span { color: var(--mist); display: block; max-width: 30ch; }
+
+  /* The roster: four elements, four towers each. A real table, because it is one. */
+  .roster-wrap { background: var(--panel); }
+  table.roster { width: 100%; max-width: 1180px; border-collapse: separate; border-spacing: 0; table-layout: fixed; }
+  .roster th, .roster td { text-align: left; vertical-align: top; padding: 0.95rem 1.1rem; }
+  .roster thead th {
+    font-family: var(--display); font-weight: 400; font-size: 1.6rem;
+    border-bottom: 5px solid currentColor; padding-bottom: 0.6rem;
+  }
+  .roster .fire { color: var(--fire); } .roster .water { color: var(--water); }
+  .roster .lightning { color: var(--lightning); } .roster .ice { color: var(--ice); }
+  .roster td { border-bottom: 1px solid rgba(239, 227, 194, 0.12); color: var(--mist); font-size: 0.975rem; line-height: 1.45; }
+  .roster td b { display: block; color: var(--cream); font-weight: 600; font-size: 1.0625rem; }
+  .roster tbody tr:last-child td { border-bottom: 0; }
+  .plain-facts { margin: 2.5rem 0 0; padding: 0; list-style: none; display: grid; grid-template-columns: repeat(auto-fit, minmax(15rem, 1fr)); gap: 1.25rem 2.5rem; max-width: 1180px; }
+  .plain-facts li { border-left: 5px solid var(--amber); padding-left: 1rem; }
+  .plain-facts b { display: block; font-weight: 600; }
+  .plain-facts span { color: var(--mist); }
+
+  /* Support */
+  .two { display: grid; grid-template-columns: minmax(0, 1.5fr) minmax(0, 1fr); gap: clamp(2rem, 5vw, 4.5rem); align-items: start; max-width: 1180px; }
+  details { border-bottom: 2px solid rgba(239, 227, 194, 0.14); }
+  details:first-of-type { border-top: 2px solid rgba(239, 227, 194, 0.14); }
+  summary { cursor: pointer; list-style: none; padding: 1.05rem 2.5rem 1.05rem 0; font-weight: 600; font-size: 1.125rem; position: relative; }
+  summary::-webkit-details-marker { display: none; }
+  summary::after { content: "+"; position: absolute; right: 0.25rem; top: 0.7rem; font-family: var(--display); font-size: 1.6rem; color: var(--amber); }
+  details[open] summary::after { content: "\2212"; }
+  details .answer { padding: 0 0 1.2rem; color: var(--mist); }
+  details .answer p:last-child { margin-bottom: 0; }
+  .contact { background: var(--panel); border: 2px solid var(--panel-lift); border-radius: 22px; padding: 1.6rem 1.6rem 1.4rem; }
+  .contact h3 { margin-bottom: 0.6rem; }
+  .contact p { color: var(--mist); }
+  .contact ol { color: var(--mist); padding-left: 1.2rem; margin: 0 0 1.2rem; }
+  .contact li { margin-bottom: 0.35rem; }
+  .button {
+    display: inline-block; background: var(--amber); color: #1a1205; text-decoration: none;
+    font-weight: 600; font-size: 1.0625rem; padding: 0.8rem 1.3rem; border-radius: 14px;
+    border-bottom: 4px solid var(--amber-deep); word-break: break-all;
+  }
+  .button:hover { color: #1a1205; background: #ffc452; }
+
+  /* Privacy: a document, set to be read. */
+  .policy { background: #0b181f; }
+  .policy .doc { max-width: 46rem; }
+  .policy h3 { margin: 2.4rem 0 0.7rem; color: var(--road); }
+  .policy p, .policy li { color: #d5e0e3; }
+  .policy ul { padding-left: 1.2rem; max-width: var(--measure); margin: 0 0 1em; }
+  .policy li { margin-bottom: 0.4rem; }
+  .policy .dated { color: var(--mist); }
+  .policy table { width: 100%; border-collapse: collapse; margin: 0.4rem 0 1.4rem; font-size: 0.975rem; }
+  .policy th, .policy td { text-align: left; vertical-align: top; padding: 0.7rem 0.9rem 0.7rem 0; border-bottom: 1px solid rgba(239, 227, 194, 0.16); }
+  .policy th { color: var(--road); font-weight: 600; }
+  .policy td { color: #d5e0e3; }
+
+  footer { padding: 2.2rem var(--gutter) 3rem; color: var(--mist); font-size: 0.95rem; border-top: 2px solid rgba(239, 227, 194, 0.14); }
+  footer p { margin: 0 0 0.3rem; max-width: none; }
+
+  @media (max-width: 860px) {
+    .hero { grid-template-columns: 1fr; min-height: 0; }
+    .hero .art { order: -1; height: min(46vh, 420px); min-height: 280px; }
+    .hero .art::before { inset: auto 0 0 0; width: auto; height: 45%; background: linear-gradient(0deg, var(--night), rgba(15, 32, 41, 0)); }
+    .hero .words { padding-top: 0; margin-top: -3.5rem; position: relative; }
+    .hero .logo { width: min(78%, 330px); }
+    .screens { grid-template-columns: repeat(3, 72vw); overflow-x: auto; padding-bottom: 1rem; scroll-snap-type: x mandatory; margin-right: calc(var(--gutter) * -1); padding-right: var(--gutter); }
+    .screens figure { scroll-snap-align: start; }
+    .two { grid-template-columns: 1fr; }
+    /* The roster becomes four stacked lists on a phone. */
+    table.roster, .roster thead, .roster tbody, .roster tr, .roster th, .roster td { display: block; }
+    .roster thead { display: none; }
+    .roster tr { display: contents; }
+    .roster tbody { display: grid; grid-template-columns: 1fr; }
+    .roster td { border-bottom: 0; padding: 0.5rem 0 0.5rem 1rem; border-left: 5px solid currentColor; margin-bottom: 0.5rem; }
+    .roster td::before { content: attr(data-element); display: block; font-family: var(--display); font-size: 0.95rem; }
+    .roster td[data-element="Fire"] { color: var(--fire); } .roster td[data-element="Water"] { color: var(--water); }
+    .roster td[data-element="Lightning"] { color: var(--lightning); } .roster td[data-element="Ice"] { color: var(--ice); }
+    .roster td b { color: var(--cream); }
+    .roster td span { color: var(--mist); }
+    .roster tbody { grid-auto-flow: row; }
+    .roster td[data-element="Fire"] { order: 1; } .roster td[data-element="Water"] { order: 2; }
+    .roster td[data-element="Lightning"] { order: 3; } .roster td[data-element="Ice"] { order: 4; }
+  }
+</style>
+</head>
+<body>
+<a class="skip" href="#game">Skip to the game</a>
+
+<header class="bar">
+  <a class="name" href="#top">ANITARA</a>
+  <nav aria-label="Sections">
+    <a href="#game">The game</a>
+    <a href="#support">Support</a>
+    <a href="#privacy">Privacy</a>
+  </nav>
+</header>
+
+<main id="top">
+  <div class="hero">
+    <div class="words">
+      <img class="logo" src="assets/logo.png" width="720" height="577" alt="ANITARA. Awaken. Defend. Ascend.">
+      <h1>The road leads to your door.</h1>
+      <p class="lede">A tower defense game where you build anywhere beside the road, in Fire, Water, Lightning and Ice, and hold your headquarters against the horde.</p>
+      <div class="where">
+        <img src="assets/icon-180.png" width="56" height="56" alt="">
+        <div>
+          <strong>For iPhone and Mac</strong>
+          <span>Coming to the App Store. No ads, and nothing in it is sold for real money.</span>
+        </div>
+      </div>
+    </div>
+    <div class="art">
+      <img src="assets/keyart.jpg" width="1080" height="1920" alt="A stone road winding uphill between a fire tower and a lightning tower.">
+    </div>
+  </div>
+
+  <section id="game">
+    <h2>Three things you do in every battle</h2>
+    <p class="intro">Each stage is a new battlefield with one to four roads. The horde walks them; you decide where it stops.</p>
+    <div class="screens">
+      <figure>
+        <img src="assets/screen-build.jpg" width="600" height="1298" alt="A tower being placed beside a road, with its range shown as a ring." loading="lazy">
+        <figcaption><strong>Build where you choose</strong><span>There are no fixed slots. Pick a tower, drag it beside the road, check its range, then build.</span></figcaption>
+      </figure>
+      <figure>
+        <img src="assets/screen-horde.jpg" width="600" height="1298" alt="A large crowd of enemies on three roads under fire from towers." loading="lazy">
+        <figcaption><strong>Hold the line</strong><span>Waves grow from a handful to a crowd. Upgrade each tower twice, or sell it and rebuild somewhere better.</span></figcaption>
+      </figure>
+      <figure>
+        <img src="assets/screen-powerup.jpg" width="600" height="1298" alt="Aiming a Meteor Rain power-up at a group of enemies." loading="lazy">
+        <figcaption><strong>Call in a power-up</strong><span>Bring up to three into a battle: Meteor Rain, Thunderstorm, Tidal Wave, Frost Charge, Battle Surge or Emergency Repair.</span></figcaption>
+      </figure>
+    </div>
+  </section>
+
+  <section class="roster-wrap" aria-labelledby="roster-title">
+    <h2 id="roster-title">Sixteen towers, four elements</h2>
+    <p class="intro">You start with three. Clearing stages earns HQ Parts, and upgrading your headquarters unlocks the rest.</p>
+    <table class="roster">
+      <thead>
+        <tr>
+          <th class="fire" scope="col">Fire</th>
+          <th class="water" scope="col">Water</th>
+          <th class="lightning" scope="col">Lightning</th>
+          <th class="ice" scope="col">Ice</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td data-element="Fire"><b>Ember Spire</b><span>A fire bolt that sets one enemy burning.</span></td>
+          <td data-element="Water"><b>Tide Lance</b><span>A precise lance that leaves its target Wet.</span></td>
+          <td data-element="Lightning"><b>Arc Needle</b><span>One heavy bolt, for tanks and bosses.</span></td>
+          <td data-element="Ice"><b>Rime Needle</b><span>Fast shards that Chill one target.</span></td>
+        </tr>
+        <tr>
+          <td data-element="Fire"><b>Cinder Lobber</b><span>An arcing shell that blasts a whole cluster.</span></td>
+          <td data-element="Water"><b>Rainwell</b><span>A rain pulse over an area: Wet and Slow.</span></td>
+          <td data-element="Lightning"><b>Storm Coil</b><span>Chain lightning between up to four enemies.</span></td>
+          <td data-element="Ice"><b>Frost Mortar</b><span>An ice shell that damages and Chills a cluster.</span></td>
+        </tr>
+        <tr>
+          <td data-element="Fire"><b>Pyre Fan</b><span>A short cone of flame across everything in front.</span></td>
+          <td data-element="Water"><b>Tidal Disc</b><span>A spinning disc that cuts through a line.</span></td>
+          <td data-element="Lightning"><b>Thunder Rail</b><span>A long beam through up to five enemies.</span></td>
+          <td data-element="Ice"><b>Winter Lens</b><span>Focused cold that can briefly Freeze its target.</span></td>
+        </tr>
+        <tr>
+          <td data-element="Fire"><b>Sunforge</b><span>A heat beam that builds to double damage.</span></td>
+          <td data-element="Water"><b>Wake Cannon</b><span>A heavy water shell with a tight blast.</span></td>
+          <td data-element="Lightning"><b>Tempest Beacon</b><span>Marks the ground, then calls a strike down on it.</span></td>
+          <td data-element="Ice"><b>Ice Citadel</b><span>A pulse of ice around itself, up to twelve enemies.</span></td>
+        </tr>
+      </tbody>
+    </table>
+    <ul class="plain-facts">
+      <li><b>The ground matters</b><span>Fire lights an Oil slick on the road. Lightning makes a puddle pulse through everyone standing in it.</span></li>
+      <li><b>Your progress follows you</b><span>Sign in with Game Center and your campaign is saved to your ANITARA account.</span></li>
+      <li><b>Coins are earned, never bought</b><span>Clearing a stage for the first time pays Coins. They buy power-ups in the Arcane Market.</span></li>
+    </ul>
+  </section>
+
+  <section id="support">
+    <h2>Support</h2>
+    <p class="intro">Most questions are about saved progress. If yours is not answered here, write to us.</p>
+    <div class="two">
+      <div>
+        <details>
+          <summary>How is my progress saved?</summary>
+          <div class="answer"><p>ANITARA signs you in with Game Center. There is no separate username or password. Your stage, headquarters, towers, Coins, HQ Parts and power-ups are saved to your ANITARA account on our server each time a battle ends.</p></div>
+        </details>
+        <details>
+          <summary>I reinstalled the game. How do I get my progress back?</summary>
+          <div class="answer"><p>Open the game while signed in to the same Game Center account as before. It signs in by itself and restores your campaign. If you see a different account, check which one is signed in under Settings, then Game Center.</p></div>
+        </details>
+        <details>
+          <summary>The game says Game Center is required</summary>
+          <div class="answer"><p>You are not signed in to Game Center on this device. Open Settings, then Game Center, sign in, return to the game and choose Try again.</p><p>You can also choose Play practice to play without an account. Practice progress stays on the device and earns no Coins or HQ Parts.</p></div>
+        </details>
+        <details>
+          <summary>The game says it could not connect</summary>
+          <div class="answer"><p>The game could not reach Game Center or our server. Check your connection and choose Try again. A battle you already started keeps running without a connection, and its result is sent when you are back online.</p></div>
+        </details>
+        <details>
+          <summary>I closed the game in the middle of a battle</summary>
+          <div class="answer"><p>The home screen shows Continue battle. The battle opens paused where you left it. A battle in progress stays on the device where it was started.</p></div>
+        </details>
+        <details>
+          <summary>Can I buy Coins or power-ups with money?</summary>
+          <div class="answer"><p>No. Nothing in ANITARA is sold for real money and there are no ads. Coins come from clearing stages for the first time.</p></div>
+        </details>
+        <details>
+          <summary>How do I delete my account?</summary>
+          <div class="answer"><p>On the home screen, tap the strip with your nickname to open Account, then choose Delete my account and confirm twice. Your account and progress are removed from our server and from the device. This cannot be undone.</p><p>If you no longer have the game installed, see the contact box on this page.</p></div>
+        </details>
+      </div>
+      <aside class="contact" aria-labelledby="contact-title">
+        <h3 id="contact-title">Write to us</h3>
+        <p>We read every message. It helps if you include:</p>
+        <ol>
+          <li>Your support reference. In the game: Account, then Copy support reference.</li>
+          <li>Your device and the version number shown at the bottom of the home screen.</li>
+          <li>What you did and what happened.</li>
+        </ol>
+        <p><a class="button" href="mailto:jbstreaming02@gmail.com?subject=ANITARA%20support">jbstreaming02@gmail.com</a></p>
+        <p style="margin-bottom:0">To have your account deleted without the game, send the same address a message titled "Delete my account" with your support reference.</p>
+      </aside>
+    </div>
+  </section>
+
+  <section id="privacy" class="policy">
+    <div class="doc">
+      <h2>Privacy policy</h2>
+      <p class="dated">Effective 27 November 2026. This policy covers the game ANITARA on iPhone and Mac and this website. The game is published by JLabs Tech.</p>
+
+      <h3>The short version</h3>
+      <ul>
+        <li>We store a Game Center player identifier, your Game Center nickname and your game progress, so that your campaign can be saved and restored.</li>
+        <li>We do not ask for or store your name, email address, phone number, contacts, location or photos.</li>
+        <li>The game has no advertising, no analytics or tracking software, and nothing to buy with real money.</li>
+        <li>We do not sell your data or share it for advertising.</li>
+        <li>You can delete your account and its data at any time, in the game or by writing to us.</li>
+      </ul>
+
+      <h3>What we collect, and why</h3>
+      <table>
+        <thead><tr><th scope="col">Information</th><th scope="col">Why we need it</th></tr></thead>
+        <tbody>
+          <tr><td>A player identifier from Game Center, and a signed proof from Apple that it is yours</td><td>To find your ANITARA account when you sign in, or to create one the first time. The identifier is specific to our games; it is not your Apple ID.</td></tr>
+          <tr><td>Your Game Center nickname</td><td>To show which account is signed in.</td></tr>
+          <tr><td>A random identifier the game creates for the device, the game version, and whether the device is an iPhone or a Mac</td><td>To keep you signed in and to allow one active battle per account.</td></tr>
+          <tr><td>Game progress: stages cleared and medals, headquarters level, unlocked towers, Coins and HQ Parts and their history, power-ups owned and used, battle results, and a few preferences such as pinned towers</td><td>To save your campaign, to restore it after a reinstall, and to keep the in-game economy fair.</td></tr>
+          <tr><td>Messages you send us by email</td><td>To answer you.</td></tr>
+        </tbody>
+      </table>
+      <p>Our server also receives the internet address of each request, as every server does. We use it only for security, such as limiting repeated sign-in attempts, and we do not build a profile from it.</p>
+
+      <h3>What stays on your device</h3>
+      <p>The game keeps a copy of your progress, the current battlefield and one unfinished battle in its own private storage. The key that keeps you signed in is stored in the system Keychain. Practice mode is stored only on the device and is never sent to us.</p>
+
+      <h3>Who else handles the data</h3>
+      <p>Apple verifies your Game Center sign-in. Our server and database run on DigitalOcean, which stores the data on our behalf. Nobody else receives it. We would disclose data only if the law required it.</p>
+
+      <h3>How it is protected</h3>
+      <p>Everything the game sends travels over an encrypted connection. Sign-in is checked on our server against Apple, and the game never sees or stores a password.</p>
+
+      <h3>How long we keep it</h3>
+      <ul>
+        <li>While your account exists, we keep the information above.</li>
+        <li>When you delete your account, the link to your Game Center identity and all sign-in sessions are removed at once, and the copy on your device is erased.</li>
+        <li>The remaining game records, which by then carry no identity, are erased within 30 days.</li>
+        <li>We keep a one-way fingerprint of the deleted identity so that the deleted account is not restored by accident. It cannot be turned back into the identifier. If you play again with the same Game Center account, you are asked first and start from stage 1.</li>
+        <li>Emails you send us stay in our mailbox until you ask us to delete them.</li>
+      </ul>
+
+      <h3>Deleting your account and your choices</h3>
+      <p>In the game, open Account from the home screen and choose Delete my account. Without the game, email <a href="mailto:jbstreaming02@gmail.com?subject=Delete%20my%20account">jbstreaming02@gmail.com</a> with your support reference; we may ask you to confirm the request so that nobody else can delete your account.</p>
+      <p>You can ask us for a copy of the data held for your account, or to correct it, at the same address. Depending on where you live, you may have further rights under your local data protection law, including the right to complain to your data protection authority.</p>
+
+      <h3>Children</h3>
+      <p>ANITARA does not ask anyone for a name, email address, location or photos, shows no advertising and sells nothing. Whether a child can use Game Center is controlled by the settings a parent or guardian chooses on the device; without Game Center the game offers practice mode, which sends us nothing. A parent or guardian can ask us to delete a child's account at the address above.</p>
+
+      <h3>This website</h3>
+      <p>This page sets no cookies and runs no analytics. It loads its typefaces from Google Fonts, so your browser contacts Google to fetch them.</p>
+
+      <h3>Changes to this policy</h3>
+      <p>If the game starts to collect anything new, we will update this page and change the date at the top before the change takes effect.</p>
+
+      <h3>Contact</h3>
+      <p>JLabs Tech, <a href="mailto:jbstreaming02@gmail.com">jbstreaming02@gmail.com</a>.</p>
+    </div>
+  </section>
+</main>
+
+<footer>
+  <p>ANITARA. Awaken. Defend. Ascend.</p>
+  <p>© 2026 JLabs Tech. Apple, iPhone, Mac, App Store and Game Center are trademarks of Apple Inc.</p>
+</footer>
+</body>
+</html>
